@@ -2,8 +2,8 @@ Pivoting
 ========
  A CoffeeScript library for dynamically pivoting & aggregating arbitrary data sets. 
  
- Requirements
- =============
+*Requirements
+
  nvd3.js
  d3.js
  angularJs
