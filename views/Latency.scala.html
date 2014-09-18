@@ -1,0 +1,158 @@
+@layout("Bullpen"){
+<head>
+    <script type="text/javascript" src="@routes.Assets.at("javascripts/utilities.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.at("javascripts/latency.js")"></script>
+</head>
+<body ng-controller="latencyCtrl">
+    <nav class="navbar navbar-default" role="navigation">
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a ng-click="exportMetricsToCsv()">Export to Csv</a>
+            </li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown">My Views<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li  ng-repeat="pref in preferences">
+                        <label>
+                            <span>
+                                <span width="70%" ng-click="loadSavedView(pref.name)">{{pref.name}}</span>
+                                <span align="right" class="verticalLine" ng-click="removeSavedView(pref.name)"><small class="text-danger">Delete</small></span>
+                            </span>
+                        </label>
+                    </li>
+                    <li><hr></li>
+                    <li>
+                        <label>
+                            <span>
+                                <input placeholder="View Name" type="text" id="name" name="prefName" ng-model="params.newViewName">
+                                <a type="btn" ng-click="saveView()">Save</a>
+                            </span>
+                        </label>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <ul class="nav nav-tabs nav-justified">
+           <li class="active"> <a ng-click="showSlippage()" data-toggle="tab">Slippage</a></li>
+           <li><a ng-click="calculateFullSetAggregates()" data-togggle="tab">Total Set Aggregates</a></li>
+           <li><a ng-click="barsByHour()" data-toggle="tab">By-X Bars</a></li>
+           <li><a ng-click="barsByHour()" data-toggle="tab">Bars over Hour</a></li>
+           <li><a ng-click="lineByTimeFocusable()" data-toggle="tab">Line Over Time</a></li>
+           <li><a ng-click="barByTime()" data-toggle="tab">Bars Over Time</a></li>
+        </ul>
+    </nav>
+    <div class="continer-fluid">
+        <div class="row">
+            <div class="col-lg-3">
+                <form novalidate role="form">
+                    <div class="form-group">
+                        <label for="startDate">From Date</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" placeholder="YYYY-MM-DD"
+                            ng-model="params.startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">To Date</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" placeholder="YYYY-MM-DD"
+                            ng-model="params.endDate">
+                    </div>
+                    <button class="btn btn-default" ng-click="fetchMetrics(params, -1)">Fetch Metrics</button>
+                </form>
+                </br>
+                </br>
+                <div class="panel-group" id="accordian">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#grouping">
+                                    Group By
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="grouping" class="panel-collapse collapse in">
+                            <div class="panel-body">
+                                <label ng-repeat="field in aggSettings.dimensions" class="switch-light well responsive-utilities" ng-show="showAccordians" >
+                                    <input type="checkbox">
+                                    <span ng-click="toggleGrouping(field)">
+                                        {{field}}
+                                        <span>No</span>
+                                        <span>Yes</span>
+                                    </span>
+                                    <a class="btn btn-primary"></a>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#operators">
+                                    Operators
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="operators" class="panel-collapse collapse in">
+                            <div class="panel-body">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label ng-repeat="op in configuration.operators" class="btn button-default" ng-click="setAggregateOp(op)" ng-show="showAccordians">
+                                        <input type="radio"> {{op.name}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#measures">
+                                    Measurements
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="measures" class="panel-collapse collapse in">
+                            <div class="panel-body">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label ng-repeat="fact in aggSettings.facts" class="btn button-default" ng-click="setFact(fact)" ng-show="showAccordians">
+                                        <input type="radio"> {{fact}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <h2 ng-show="fetching">Loading Data. Please Wait.</h2>
+                <table class="table table-bordered table-striped responsive-utilities" ng-show="showAggregateTable">
+                    <tbody>
+                    <tr>
+                        <td></td>
+                        <td><b>Average (over time)</b></td>
+                        <td><b>Sum</b></td>
+                        <td><b>Count</b></td>
+                        <td><b>Max</b></td>
+                        <td><b>Min</b></td>
+                    </tr>
+                    <tr ng-repeat="agg in fullSetAggregates">
+                        <td>{{agg.name}}</td>
+                        <td>{{agg.mean}}</td>
+                        <td>{{agg.sum}}</td>
+                        <td>{{agg.count}}</td>
+                        <td>{{agg.maximum}}</td>
+                        <td>{{agg.minimum}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--style>
+                    #chart svg {
+                    height: 800px;
+                    }
+                </style!-->
+                <div id="chart">
+                    <svg overflow="scroll"></svg>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+}
