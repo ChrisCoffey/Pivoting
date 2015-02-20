@@ -177,8 +177,8 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
 
     $scope.configuration = new AggregateConfiguration
     $scope.aggSettings = new AggregationSettings
-    $scope.aggSettings.facts = ["orderCount", "quantity", "latency", "slippage", "timeStamp"] #pass these in
-    $scope.aggSettings.dimensions = [ "None", "instrument", "secType", "side", "group", "client", "server", "strategy" ] #pass these in
+    $scope.aggSettings.facts = ["date", "sales", "covers", "discounts", "refunds"] #pass these in
+    $scope.aggSettings.dimensions = [ "None", "dayPart", "revenueCategory","employee" ] #pass these in
     $scope.aggSettings.groupByFields = []
     $scope.params = {}
     $scope.preferences = retrievePreferences()
@@ -208,6 +208,8 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
         $window.open(csvUri)
 
     $scope.calculateAggregateKvp = (xAxisFunc) ->
+        console.log($scope.aggSettings.groupByFields)
+        console.log($scope.aggSettings.currentFact)
         aggregates = aggregate($scope.aggSettings.groupByFields, $scope.aggSettings.aggFunction.func, xAxisFunc, $scope.aggSettings.currentFact, $scope.metrics)
         formattedData = []
         for own category, group of aggregates
@@ -262,23 +264,40 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
         )
 
     $scope.barsByHour = () ->
+        console.log ("in the call")
         $scope.showAggregateTable = false
         d3.selectAll("svg > *").remove()
+        console.log ("removed old svg")
         #if $scope.validationFailed() then return
         $scope.aggSettings.tab = 2
 
         hours = (d) ->
-            new Date(d.timeStamp).getHours()
+            new Date(d.date).getHours()
 
         formattedData = $scope.calculateAggregateKvp(hours)      
+
+        kvpData = []
+        for {k, values} in formattedData
+            n = {key: k}
+            for v in values
+                n["values"] = {x: v[0], y: v[1]}
+            kvpData.push(n)
+
+        console.log (kvpData)
+
         nv.addGraph ->
             chart = nv.models.multiBarChart()
-            .x( (d) -> d[0])
-            .y( (d) -> d[1])
-            .transitionDuration(350).reduceXTicks(true).rotateLabels(0).groupSpacing(0.1).margin({left: 100}, bottom: 60)
-            chart.xAxis.tickFormat d3.format(",.1f")
-            chart.yAxis.tickFormat d3.format(",.001f")
-            d3.select("#chart svg").datum(formattedData).call(chart)
+                    .transitionDuration(350)
+                    .reduceXTicks(true)   #If 'false', every single x-axis tick label will be rendered.
+                    .rotateLabels(0)      #Angle to rotate x-axis labels.
+                    .showControls(true)   #Allow user to switch between 'Grouped' and 'Stacked' mode.
+                    .groupSpacing(0.1)    #Distance between each group of bars.
+            
+            chart.xAxis.tickFormat d3.format(",1f")
+            chart.yAxis.tickFormat d3.format(",1f")
+            d3.select("#chart svg")
+                .datum(kvpData)
+                .call(chart)
             nv.utils.windowResize chart.update
             chart
 
@@ -290,7 +309,7 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
         $scope.aggSettings.tab = 4
 
         tsFunc = (d) ->
-            d.timeStamp
+            d.date
 
         formattedData = $scope.calculateAggregateKvp(tsFunc)      
         heightCoefficient = if formattedData.length >= 15 then 5 else 1
@@ -312,7 +331,7 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
         $scope.aggSettings.tab = 3
         
         tsFunc = (d) ->
-            d.timeStamp
+            d.date
 
         formattedData = $scope.calculateAggregateKvp(tsFunc)
 
@@ -343,21 +362,38 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
             failed = true
         return failed
 
-    $scope.fetchMetrics = (params, continuation) ->
+    $scope.fetchMetrics = (params) ->
         $scope.fetching = true
         $scope.aggSettings.startDate = params.startDate
         $scope.aggSettings.endDate = params.endDate
+        emps = ["Smith", "Josh", "Sonia", "Paraig", "Rachel"]
+        category = ["Food", "Beverage", "Goods", "Other"]
+        dayPart = ["Breakfast", "Lunch", "Dinner"]
 
-        jsRoutes.controllers.Application.getLatency(params.startDate, params.endDate).ajax(success: (data) ->
-           $scope.$apply( () ->
-               $scope.metrics = data
-               $scope.showAccordians = true
-               $scope.fetching = false
+        r = Math.floor(Math.random() * 3000) + 700
+        sales = []
 
-               if (type(continuation) == 'function') then continuation()
-               )
-        )
+        for i in  [1 .. r]
+            s = Math.floor(Math.random() * 150) + 1
+            d = Math.floor(Math.random() * 15)
+            r = if s % 17 == 0 then Math.floor(Math.random() * s) else 0
+            c = Math.floor(Math.random() * 7) + 1
+            emp = emps[s % 5]
+            date = new Date(params.startDate.getTime() + (Math.random() * (params.endDate.getTime() - params.startDate.getTime())))
+            cat = category[s % 4]
+            dPart = dayPart[s % 3]
+            hours = Math.floor(Math.random() * 14) + 7
+            date.setHours(hours)
+            rec = {date: date, dayPart: dPart, sales: s, discount: d, refund: r, covers: c, employee: emp, revenueCategory: cat}
+            sales.push(rec)
 
+
+        $scope.metrics = sales
+        console.log($scope.metrics)
+        $scope.showAccordians = true
+        $scope.fetching = false 
+    
+    
     #refactor this block into a service
     $scope.saveView = () ->
         $window.localStorage.setItem("View-"+$scope.params.newViewName, JSON.stringify($scope.aggSettings))
@@ -386,16 +422,10 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
 
         $scope.fetchMetrics($scope.params, continuation)
 
-#        elements = document.getElementsByTagName('label')
- #       for e in elements
-  #          checkbox = {}
-   #         for 
-        #set the groupings
-
-    $scope.removeSavedView = (name) ->
-        console.log "deleting view " + name
-        $window.localStorage.removeItem("View-" + name)
-        $scope.preferences = retrievePreferences()  
+    # $scope.removeSavedView = (name) ->
+    #     console.log "deleting view " + name
+    #     $window.localStorage.removeItem("View-" + name)
+    #     $scope.preferences = retrievePreferences()  
 
 )
 
