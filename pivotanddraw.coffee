@@ -238,10 +238,9 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
         $scope.fullSetAggregates = table
 
     $scope.barsByHour = () ->
-        console.log ("in the call")
         $scope.showAggregateTable = false
+        $scope.showTmap = false
         d3.selectAll("svg > *").remove()
-        console.log ("removed old svg")
         #if $scope.validationFailed() then return
         $scope.aggSettings.tab = 2
 
@@ -261,21 +260,11 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
 
         console.log (kvpData)
 
-        nv.addGraph ->
-            # chart = nv.models.multiBarChart()
-            #       .transitionDuration(350)
-            #       .reduceXTicks(true)  #If 'false', every single x-axis tick label will be rendered.
-            #       .rotateLabels(0)      #Angle to rotate x-axis labels.
-            #       .showControls(true)   #Allow user to switch between 'Grouped' and 'Stacked' mode.
-            #       .groupSpacing(0.1) 
-            
+        nv.addGraph ->       
             chart = nv.models.multiBarChart()
-
-            console.log("chart created")
 
             chart.xAxis.tickFormat d3.format(",1f")
             chart.yAxis.tickFormat d3.format(",1f")
-            console.log("axis scaled")
 
             d3.select("#chart svg")
                 .datum(kvpData)
@@ -284,8 +273,30 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
             chart
 
 
+
+    $scope.barsByX = () ->
+        $scope.showAggregateTable = false
+        $scope.showTmap = false
+        d3.selectAll("svg > *").remove()
+        #if $scope.validationFailed() then return
+        $scope.aggSettings.tab = 2
+
+        hours = (d) ->
+            new Date(d.date).getHours()
+
+        formattedData = $scope.calculateAggregateKvp(hours)      
+        kvpData = []
+        for a in formattedData
+            n = {key: a.key, values: []}
+            for v in a.values
+                n["values"].push({x: v[0], y: v[1]})
+            kvpData.push(n)
+
+
+
     $scope.barByTime = () ->
         $scope.showAggregateTable = false
+        $scope.showTmap = false
         d3.selectAll("svg > *").remove()
         if $scope.validationFailed() then return
         $scope.aggSettings.tab = 4
@@ -308,6 +319,7 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
 
     $scope.lineByTimeFocusable = () ->
         $scope.showAggregateTable = false
+        $scope.showTmap = false
         d3.selectAll("svg > *").remove()
         if $scope.validationFailed() then return
         $scope.aggSettings.tab = 3
@@ -383,7 +395,227 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
         $scope.showAccordians = true
         $scope.fetching = false 
     
+    $scope.makeCatalogTree = () ->
+        tree = []
+        # tree node looks like {"name", children} or {name, value}
+        sites = [{n:"Tatte Third St", m: 17}, 
+                {n:"Tatte Broadway", m: 5}, 
+                {n:"Tatte Beacon Hill", m: 9},
+                {n: "Tatte Outer Kendall", m: 14}, 
+                {n:"Tatte Catering", m:  10}]
+
+
+        r = (n) -> Math.floor(Math.random() * n) + 1
     
+
+        for site in sites
+            label = site.n
+            multiplier = site.m
+            node = {name: label, children: [
+                {name: "Food", children: [
+                    {name: "Pasteries", children: [
+                        {name: "Muffin", value: r(30) * multiplier},
+                        {name: "Cookie", value: r(70) * multiplier},
+                        {name: "Crossiant", value: r(100) * multiplier},
+                        {name: "Bread", value: r(15) * multiplier}
+                    ]},
+                    {name: "Salads", children: [
+                        {name: "Chicken", value: r(45) * multiplier},
+                        {name: "Garden", value: r(84) * multiplier},
+                        {name: "Steak", value: r(97) * multiplier}
+                    ]},
+                    {name: "Sandwiches", children: [
+                        {name: "PB & J", value: r(57) * multiplier},
+                        {name: "Tuna", value: r(74) * multiplier},
+                        {name: "Grilled Cheese", value: r(119) * multiplier},
+                        {name: "Meatball Sub", value: r(159) * multiplier},
+                        {name: "Chicken", value: r(103) * multiplier},
+                        {name: "Reuben", value: r(133) * multiplier}
+                    ]},
+                ]},
+                {name: "Beverages", children: [
+                    {name: "Coffees", children: [
+                        {name: "Drip", value: r(15) * multiplier},
+                        {name: "Americano", value: r(22) * multiplier},
+                        {name: "Cappucino", value: r(31) * multiplier},
+                        {name: "Espresso", value: r(46) * multiplier},
+                        {name: "Latte", value: r(18) * multiplier}
+                    ]},
+                    {name: "Sodas", children: [
+                        {name: "San Pelegrino", value: r(33) * multiplier},
+                        {name: "Coke", value: r(11) * multiplier},
+                        {name: "Pepsi", value: r(11) * multiplier}
+                    ]},
+                    {name: "Cocktails", children: [
+                        {name: "A", value: r(10) * multiplier},
+                        {name: "B", value: r(20) * multiplier},
+                        {name: "C", value: r(30) * multiplier},
+                        {name: "D", value: r(40) * multiplier},
+                        {name: "E", value: r(50) * multiplier},
+                        {name: "F", value: r(60) * multiplier}
+                    ]},
+                ]},
+                {name: "Goods", children: [
+                    {name: "Books", children: [
+                        {name: "Cookbook 1", value: r(19) * multiplier},
+                        {name: "Cookbook 2", value: r(29) * multiplier}
+                    ]},
+                    {name: "Clothes", children: [
+                        {name: "Apron", value: r(7) * multiplier},
+                        {name: "Hat", value: r(7) * multiplier},
+                        {name: "Tee", value: r(7) * multiplier},
+                        {name: "Sweatshirt", value: r(7) * multiplier}
+                    ]}
+                ]},
+                {name: "Other", children: [
+                    {name: "Gift Cards", children: [
+                        {name: "Tatte Brand", value: r(70) * multiplier},
+                        {name: "Processor Brand", value: r(15) * multiplier},
+                        {name: "Monopoly Money", value: 9}
+                    ]}
+                ]}
+            ]}
+            tree.push(node)
+ 
+        tatte = {name: "Tatte", children: tree}
+        return tatte
+        
+        
+
+    $scope.treeMap = () ->
+        $scope.showAggregateTable = false
+        d3.selectAll("svg > *").remove()
+        $scope.aggSettings.tab = 5
+        tree = $scope.makeCatalogTree()
+
+        margin = {top: 20, right: 0, bottom:0, left:0}
+        width = 960
+        height = 500 - margin.top - margin.bottom
+        formatNumber = d3.format(",d")
+        transitioning = null
+
+        x = d3.scale.linear().domain([0, width]).range([0, width])
+        y = d3.scale.linear().domain([0, height]).range([0, height])
+
+        tMap = d3.layout.treemap()
+            .children((d, depth) -> if depth then  null else d._children)
+            .sort((l, r) -> l.value - r.value)
+            .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
+            .round(false)
+
+        svg = d3.select("#chart svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.bottom + margin.top)
+            .style("background", "#ddd")
+            .style("margin-left", -margin.left + "px")
+            .style("margin.right", -margin.right + "px")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+            .style("shape-rendering", "crispEdges")
+
+        grandparent = svg.append("g").attr("class", "grandparent")
+        grandparent.append("rect").attr("y", -margin.top)
+        .attr("width", width)
+        .attr("height", margin.top)
+
+        grandparent.append("text").attr("y", 6 - margin.top).attr("x", 6).attr("dy", ".75em")
+
+        initialize = (data) ->
+            data.x = 0
+            data.y = 0
+            data.dx = width
+            data.dy = height
+            data.depth = 0
+
+        # Recursively walk the data & aggregate the leaf node values
+        accumulate = (data) ->
+            if data._children = data.children 
+            then data.value = `data.children.reduce(function(p, v) { return p + accumulate(v); }, 0)`
+            else data.value
+
+        # Recursively walk the children & set proportional layouts so we can preserve good ratios
+        layout = (data) ->
+            if data._children 
+                tMap.nodes({_children: data._children})
+                for child in data._children
+                    child.x = data.x + child.x * data.dx
+                    child.y = data.y + child.y * data.dy
+                    child.dx *= data.dx 
+                    child.dy *= data.dy
+                    child.parent = data
+                    layout(child)
+
+        display = (data) ->
+            grandparent.datum(data.parent)
+            .on("click", (d, i) -> 
+                transition(d))
+            .select("text").text(name(data))
+
+            g1 = svg.insert("g", ".grandparent")
+            .datum(data)
+            .attr("class", "depth")
+
+            g = g1.selectAll("g").data(data._children)
+            .enter().append("g")
+
+            g.filter((d) -> d._children).classed("children", true)
+            .on("click", (d, i) ->
+                transition(d))
+
+            g.selectAll(".child").data((d) -> d._children || [d])
+            .enter().append("rect").attr("class", "child").call(rect)
+
+            g.append("rect").attr("class", "parent").call(rect)
+            .append("title").text((d) -> formatNumber(d.value))
+
+            g.append("text").attr("dy", ".75em")
+            .text((d) -> d.name + ":  $"+ d.value).call(text)
+
+            transition = (d) ->
+                if transitioning or !d 
+                    return
+                else
+                    transitioning = true
+                    g2 = display(d)
+                    t1 = g1.transition().duration(750)
+                    t2 = g2.transition().duration(750)
+                    x.domain([d.x, d.x + d.dx])
+                    y.domain([d.y, d.y + d.dy])
+                    svg.style("shape-rendering", null)
+                    svg.selectAll(".depth").sort((l, r) -> l.depth - r.depth)
+                    g2.selectAll("text").style("fill-opacity", 0)
+
+                    t1.selectAll("text").call(text).style("fill-opacity", 0)
+                    t2.selectAll("text").call(text).style("fill-opacity", 1)
+                    t1.selectAll("rect").call(rect)
+                    t2.selectAll("rect").call(rect)
+
+                    t1.remove().each("end", () ->
+                        svg.style("shape-rendering", "crispEdges")
+                        transitioning = false)
+
+            return g
+
+        text = (txt) ->
+            txt.attr("x", (d) -> x(d.x) + 6).attr("y", (d) -> y(d.y) + 6)
+
+        rect = (rct) ->
+            rct.attr("x", (d) -> x(d.x))
+            .attr("y", (d) -> y(d.y))
+            .attr("width", (d) -> x(d.x + d.dx) - x(d.x))
+            .attr("height", (d) -> y(d.y + d.dy) - y(d.y))
+
+        name = (d) -> 
+            if d.parent 
+            then name(d.parent) + "." + d.name 
+            else d.name
+    
+        initialize(tree)
+        accumulate(tree)
+        layout(tree)
+        display(tree)
+
+        
     #refactor this block into a service
     $scope.saveView = () ->
         $window.localStorage.setItem("View-"+$scope.params.newViewName, JSON.stringify($scope.aggSettings))

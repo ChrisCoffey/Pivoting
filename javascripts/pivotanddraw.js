@@ -424,10 +424,9 @@
     };
     $scope.barsByHour = function() {
       var a, formattedData, hours, j, kvpData, len, len1, m, n, ref, v;
-      console.log("in the call");
       $scope.showAggregateTable = false;
+      $scope.showTmap = false;
       d3.selectAll("svg > *").remove();
-      console.log("removed old svg");
       $scope.aggSettings.tab = 2;
       hours = function(d) {
         return new Date(d.date).getHours();
@@ -455,18 +454,47 @@
       return nv.addGraph(function() {
         var chart;
         chart = nv.models.multiBarChart();
-        console.log("chart created");
         chart.xAxis.tickFormat(d3.format(",1f"));
         chart.yAxis.tickFormat(d3.format(",1f"));
-        console.log("axis scaled");
         d3.select("#chart svg").datum(kvpData).call(chart);
         nv.utils.windowResize(chart.update);
         return chart;
       });
     };
+    $scope.barsByX = function() {
+      var a, formattedData, hours, j, kvpData, len, len1, m, n, ref, results, v;
+      $scope.showAggregateTable = false;
+      $scope.showTmap = false;
+      d3.selectAll("svg > *").remove();
+      $scope.aggSettings.tab = 2;
+      hours = function(d) {
+        return new Date(d.date).getHours();
+      };
+      formattedData = $scope.calculateAggregateKvp(hours);
+      kvpData = [];
+      results = [];
+      for (j = 0, len = formattedData.length; j < len; j++) {
+        a = formattedData[j];
+        n = {
+          key: a.key,
+          values: []
+        };
+        ref = a.values;
+        for (m = 0, len1 = ref.length; m < len1; m++) {
+          v = ref[m];
+          n["values"].push({
+            x: v[0],
+            y: v[1]
+          });
+        }
+        results.push(kvpData.push(n));
+      }
+      return results;
+    };
     $scope.barByTime = function() {
       var formattedData, heightCoefficient, tsFunc;
       $scope.showAggregateTable = false;
+      $scope.showTmap = false;
       d3.selectAll("svg > *").remove();
       if ($scope.validationFailed()) {
         return;
@@ -499,6 +527,7 @@
     $scope.lineByTimeFocusable = function() {
       var formattedData, tsFunc;
       $scope.showAggregateTable = false;
+      $scope.showTmap = false;
       d3.selectAll("svg > *").remove();
       if ($scope.validationFailed()) {
         return;
@@ -587,6 +616,365 @@
       console.log($scope.metrics);
       $scope.showAccordians = true;
       return $scope.fetching = false;
+    };
+    $scope.makeCatalogTree = function() {
+      var j, label, len, multiplier, node, r, site, sites, tatte, tree;
+      tree = [];
+      sites = [
+        {
+          n: "Tatte Third St",
+          m: 17
+        }, {
+          n: "Tatte Broadway",
+          m: 5
+        }, {
+          n: "Tatte Beacon Hill",
+          m: 9
+        }, {
+          n: "Tatte Outer Kendall",
+          m: 14
+        }, {
+          n: "Tatte Catering",
+          m: 10
+        }
+      ];
+      r = function(n) {
+        return Math.floor(Math.random() * n) + 1;
+      };
+      for (j = 0, len = sites.length; j < len; j++) {
+        site = sites[j];
+        label = site.n;
+        multiplier = site.m;
+        node = {
+          name: label,
+          children: [
+            {
+              name: "Food",
+              children: [
+                {
+                  name: "Pasteries",
+                  children: [
+                    {
+                      name: "Muffin",
+                      value: r(30) * multiplier
+                    }, {
+                      name: "Cookie",
+                      value: r(70) * multiplier
+                    }, {
+                      name: "Crossiant",
+                      value: r(100) * multiplier
+                    }, {
+                      name: "Bread",
+                      value: r(15) * multiplier
+                    }
+                  ]
+                }, {
+                  name: "Salads",
+                  children: [
+                    {
+                      name: "Chicken",
+                      value: r(45) * multiplier
+                    }, {
+                      name: "Garden",
+                      value: r(84) * multiplier
+                    }, {
+                      name: "Steak",
+                      value: r(97) * multiplier
+                    }
+                  ]
+                }, {
+                  name: "Sandwiches",
+                  children: [
+                    {
+                      name: "PB & J",
+                      value: r(57) * multiplier
+                    }, {
+                      name: "Tuna",
+                      value: r(74) * multiplier
+                    }, {
+                      name: "Grilled Cheese",
+                      value: r(119) * multiplier
+                    }, {
+                      name: "Meatball Sub",
+                      value: r(159) * multiplier
+                    }, {
+                      name: "Chicken",
+                      value: r(103) * multiplier
+                    }, {
+                      name: "Reuben",
+                      value: r(133) * multiplier
+                    }
+                  ]
+                }
+              ]
+            }, {
+              name: "Beverages",
+              children: [
+                {
+                  name: "Coffees",
+                  children: [
+                    {
+                      name: "Drip",
+                      value: r(15) * multiplier
+                    }, {
+                      name: "Americano",
+                      value: r(22) * multiplier
+                    }, {
+                      name: "Cappucino",
+                      value: r(31) * multiplier
+                    }, {
+                      name: "Espresso",
+                      value: r(46) * multiplier
+                    }, {
+                      name: "Latte",
+                      value: r(18) * multiplier
+                    }
+                  ]
+                }, {
+                  name: "Sodas",
+                  children: [
+                    {
+                      name: "San Pelegrino",
+                      value: r(33) * multiplier
+                    }, {
+                      name: "Coke",
+                      value: r(11) * multiplier
+                    }, {
+                      name: "Pepsi",
+                      value: r(11) * multiplier
+                    }
+                  ]
+                }, {
+                  name: "Cocktails",
+                  children: [
+                    {
+                      name: "A",
+                      value: r(10) * multiplier
+                    }, {
+                      name: "B",
+                      value: r(20) * multiplier
+                    }, {
+                      name: "C",
+                      value: r(30) * multiplier
+                    }, {
+                      name: "D",
+                      value: r(40) * multiplier
+                    }, {
+                      name: "E",
+                      value: r(50) * multiplier
+                    }, {
+                      name: "F",
+                      value: r(60) * multiplier
+                    }
+                  ]
+                }
+              ]
+            }, {
+              name: "Goods",
+              children: [
+                {
+                  name: "Books",
+                  children: [
+                    {
+                      name: "Cookbook 1",
+                      value: r(19) * multiplier
+                    }, {
+                      name: "Cookbook 2",
+                      value: r(29) * multiplier
+                    }
+                  ]
+                }, {
+                  name: "Clothes",
+                  children: [
+                    {
+                      name: "Apron",
+                      value: r(7) * multiplier
+                    }, {
+                      name: "Hat",
+                      value: r(7) * multiplier
+                    }, {
+                      name: "Tee",
+                      value: r(7) * multiplier
+                    }, {
+                      name: "Sweatshirt",
+                      value: r(7) * multiplier
+                    }
+                  ]
+                }
+              ]
+            }, {
+              name: "Other",
+              children: [
+                {
+                  name: "Gift Cards",
+                  children: [
+                    {
+                      name: "Tatte Brand",
+                      value: r(70) * multiplier
+                    }, {
+                      name: "Processor Brand",
+                      value: r(15) * multiplier
+                    }, {
+                      name: "Monopoly Money",
+                      value: 9
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        };
+        tree.push(node);
+      }
+      tatte = {
+        name: "Tatte",
+        children: tree
+      };
+      return tatte;
+    };
+    $scope.treeMap = function() {
+      var accumulate, display, formatNumber, grandparent, height, initialize, layout, margin, name, rect, svg, tMap, text, transitioning, tree, width, x, y;
+      $scope.showAggregateTable = false;
+      d3.selectAll("svg > *").remove();
+      $scope.aggSettings.tab = 5;
+      tree = $scope.makeCatalogTree();
+      margin = {
+        top: 20,
+        right: 0,
+        bottom: 0,
+        left: 0
+      };
+      width = 960;
+      height = 500 - margin.top - margin.bottom;
+      formatNumber = d3.format(",d");
+      transitioning = null;
+      x = d3.scale.linear().domain([0, width]).range([0, width]);
+      y = d3.scale.linear().domain([0, height]).range([0, height]);
+      tMap = d3.layout.treemap().children(function(d, depth) {
+        if (depth) {
+          return null;
+        } else {
+          return d._children;
+        }
+      }).sort(function(l, r) {
+        return l.value - r.value;
+      }).ratio(height / width * 0.5 * (1 + Math.sqrt(5))).round(false);
+      svg = d3.select("#chart svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.bottom + margin.top).style("background", "#ddd").style("margin-left", -margin.left + "px").style("margin.right", -margin.right + "px").append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").style("shape-rendering", "crispEdges");
+      grandparent = svg.append("g").attr("class", "grandparent");
+      grandparent.append("rect").attr("y", -margin.top).attr("width", width).attr("height", margin.top);
+      grandparent.append("text").attr("y", 6 - margin.top).attr("x", 6).attr("dy", ".75em");
+      initialize = function(data) {
+        data.x = 0;
+        data.y = 0;
+        data.dx = width;
+        data.dy = height;
+        return data.depth = 0;
+      };
+      accumulate = function(data) {
+        if (data._children = data.children) {
+          return data.value = data.children.reduce(function(p, v) { return p + accumulate(v); }, 0);
+        } else {
+          return data.value;
+        }
+      };
+      layout = function(data) {
+        var child, j, len, ref, results;
+        if (data._children) {
+          tMap.nodes({
+            _children: data._children
+          });
+          ref = data._children;
+          results = [];
+          for (j = 0, len = ref.length; j < len; j++) {
+            child = ref[j];
+            child.x = data.x + child.x * data.dx;
+            child.y = data.y + child.y * data.dy;
+            child.dx *= data.dx;
+            child.dy *= data.dy;
+            child.parent = data;
+            results.push(layout(child));
+          }
+          return results;
+        }
+      };
+      display = function(data) {
+        var g, g1, transition;
+        grandparent.datum(data.parent).on("click", function(d, i) {
+          return transition(d);
+        }).select("text").text(name(data));
+        g1 = svg.insert("g", ".grandparent").datum(data).attr("class", "depth");
+        g = g1.selectAll("g").data(data._children).enter().append("g");
+        g.filter(function(d) {
+          return d._children;
+        }).classed("children", true).on("click", function(d, i) {
+          return transition(d);
+        });
+        g.selectAll(".child").data(function(d) {
+          return d._children || [d];
+        }).enter().append("rect").attr("class", "child").call(rect);
+        g.append("rect").attr("class", "parent").call(rect).append("title").text(function(d) {
+          return formatNumber(d.value);
+        });
+        g.append("text").attr("dy", ".75em").text(function(d) {
+          return d.name + ":  $" + d.value;
+        }).call(text);
+        transition = function(d) {
+          var g2, t1, t2;
+          if (transitioning || !d) {
+
+          } else {
+            transitioning = true;
+            g2 = display(d);
+            t1 = g1.transition().duration(750);
+            t2 = g2.transition().duration(750);
+            x.domain([d.x, d.x + d.dx]);
+            y.domain([d.y, d.y + d.dy]);
+            svg.style("shape-rendering", null);
+            svg.selectAll(".depth").sort(function(l, r) {
+              return l.depth - r.depth;
+            });
+            g2.selectAll("text").style("fill-opacity", 0);
+            t1.selectAll("text").call(text).style("fill-opacity", 0);
+            t2.selectAll("text").call(text).style("fill-opacity", 1);
+            t1.selectAll("rect").call(rect);
+            t2.selectAll("rect").call(rect);
+            return t1.remove().each("end", function() {
+              svg.style("shape-rendering", "crispEdges");
+              return transitioning = false;
+            });
+          }
+        };
+        return g;
+      };
+      text = function(txt) {
+        return txt.attr("x", function(d) {
+          return x(d.x) + 6;
+        }).attr("y", function(d) {
+          return y(d.y) + 6;
+        });
+      };
+      rect = function(rct) {
+        return rct.attr("x", function(d) {
+          return x(d.x);
+        }).attr("y", function(d) {
+          return y(d.y);
+        }).attr("width", function(d) {
+          return x(d.x + d.dx) - x(d.x);
+        }).attr("height", function(d) {
+          return y(d.y + d.dy) - y(d.y);
+        });
+      };
+      name = function(d) {
+        if (d.parent) {
+          return name(d.parent) + "." + d.name;
+        } else {
+          return d.name;
+        }
+      };
+      initialize(tree);
+      accumulate(tree);
+      layout(tree);
+      return display(tree);
     };
     $scope.saveView = function() {
       $window.localStorage.setItem("View-" + $scope.params.newViewName, JSON.stringify($scope.aggSettings));
