@@ -187,6 +187,7 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
     $scope.showAggregateTable = false
     $scope.selectedFact = {}
     $scope.fullSetAggregates = []
+    $scope.dataPoints = 100
 
 
     $scope.setAggregateOp = (op) ->
@@ -236,33 +237,6 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
             table.push n
         $scope.fullSetAggregates = table
 
-    $scope.showSlippage = () ->
-        $scope.showAggregateTable = false
-        d3.selectAll("svg > *").remove()
-        $scope.aggSettings.tab = 1
-
-        slippageData = {}
-        rawData = $scope.metrics.map (d) ->
-            category = if d.slippage > 0
-                         'Positive'
-                       else if d.slippage < 0
-                         'Negative'
-                       else
-                         'None'
-            slippage = d.slippage
-            {category, slippage}
-
-        for {category, slippage} in rawData
-            (slippageData[category] or= []).push {category, slippage}
-
-        reduced = $.map(slippageData, (value, index) -> {label: index, val: value.length})
-
-        nv.addGraph( () ->
-            chart = nv.models.pieChart().x((d) -> d.label ).y((d) -> d.val).showLabels(true)
-            d3.select("#chart svg").datum(reduced).transition().duration(1000).call(chart)
-            return chart
-        )
-
     $scope.barsByHour = () ->
         console.log ("in the call")
         $scope.showAggregateTable = false
@@ -275,26 +249,34 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
             new Date(d.date).getHours()
 
         formattedData = $scope.calculateAggregateKvp(hours)      
+        console.log(formattedData)
+
 
         kvpData = []
-        for {k, values} in formattedData
-            n = {key: k}
-            for v in values
-                n["values"] = {x: v[0], y: v[1]}
+        for a in formattedData
+            n = {key: a.key, values: []}
+            for v in a.values
+                n["values"].push({x: v[0], y: v[1]})
             kvpData.push(n)
 
         console.log (kvpData)
 
         nv.addGraph ->
-            chart = nv.models.multiBarChart()
-                    .transitionDuration(350)
-                    .reduceXTicks(true)   #If 'false', every single x-axis tick label will be rendered.
-                    .rotateLabels(0)      #Angle to rotate x-axis labels.
-                    .showControls(true)   #Allow user to switch between 'Grouped' and 'Stacked' mode.
-                    .groupSpacing(0.1)    #Distance between each group of bars.
+            # chart = nv.models.multiBarChart()
+            #       .transitionDuration(350)
+            #       .reduceXTicks(true)  #If 'false', every single x-axis tick label will be rendered.
+            #       .rotateLabels(0)      #Angle to rotate x-axis labels.
+            #       .showControls(true)   #Allow user to switch between 'Grouped' and 'Stacked' mode.
+            #       .groupSpacing(0.1) 
             
+            chart = nv.models.multiBarChart()
+
+            console.log("chart created")
+
             chart.xAxis.tickFormat d3.format(",1f")
             chart.yAxis.tickFormat d3.format(",1f")
+            console.log("axis scaled")
+
             d3.select("#chart svg")
                 .datum(kvpData)
                 .call(chart)
@@ -366,11 +348,16 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
         $scope.fetching = true
         $scope.aggSettings.startDate = params.startDate
         $scope.aggSettings.endDate = params.endDate
+        $scope.dataPoints = params.dataPoints
+        console.log($scope.dataPoints)
         emps = ["Smith", "Josh", "Sonia", "Paraig", "Rachel"]
         category = ["Food", "Beverage", "Goods", "Other"]
         dayPart = ["Breakfast", "Lunch", "Dinner"]
 
-        r = Math.floor(Math.random() * 3000) + 700
+
+
+        #r = Math.floor(Math.random() * 3000) + 700
+        r = $scope.dataPoints
         sales = []
 
         for i in  [1 .. r]
@@ -387,6 +374,9 @@ latency.controller('latencyCtrl', ($scope, $http, $window) ->
             rec = {date: date, dayPart: dPart, sales: s, discount: d, refund: r, covers: c, employee: emp, revenueCategory: cat}
             sales.push(rec)
 
+        sales.sort((l, r) ->
+            l.date.getTime() - r.date.getTime()
+            )
 
         $scope.metrics = sales
         console.log($scope.metrics)

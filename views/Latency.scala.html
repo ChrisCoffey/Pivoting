@@ -45,7 +45,6 @@
             </li>
         </ul>
         <ul class="nav nav-tabs nav-justified">
-           <li class="active"> <a ng-click="showSlippage()" data-toggle="tab">Slippage</a></li>
            <li><a ng-click="calculateFullSetAggregates()" data-togggle="tab">Total Set Aggregates</a></li>
            <li><a ng-click="barsByHour()" data-toggle="tab">By-X Bars</a></li>
            <li><a ng-click="barsByHour()" data-toggle="tab">Bars over Hour</a></li>
@@ -66,6 +65,10 @@
                         <label for="endDate">To Date</label>
                         <input type="date" class="form-control" id="endDate" name="endDate" placeholder="YYYY-MM-DD"
                             ng-model="params.endDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataPoints">Data Points To Generate</label>
+                        <input type="number" name="dataPoints" min="20" max="5000" class="form-control" ng-model="params.dataPoints">
                     </div>
                     <button class="btn btn-default" ng-click="fetchMetrics(params, -1)">Fetch Metrics</button>
                 </form>
@@ -150,15 +153,17 @@
                     </tr>
                     </tbody>
                 </table>
-<!--                 <style>
-                    #chart svg {
-                    height: 800px;
-                    }
-                </style> -->
-                <div id="chart" height="100%" width="100%">
-                    <svg overflow="scroll"></svg>
-                </div>
             </div>
+            <style>
+            #chart svg {
+                height: 600px;
+                width: 900px;
+            }
+            </style>
+            <div id="chart">
+                <svg overflow="scroll"></svg>
+            </div>
+
         </div>
 
     </div>

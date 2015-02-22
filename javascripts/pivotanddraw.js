@@ -206,7 +206,7 @@
   };
 
   exportAsCSV = function(data) {
-    var body, csv, d, header, j, k, key, l, len, len1, r, ref, row, v, value;
+    var body, csv, d, header, j, k, key, len, len1, m, r, ref, row, v, value;
     console.log(data != null);
     if (data === {}) {
       alert("Fetch some data first.");
@@ -232,8 +232,8 @@
     }
     csv = "data:text/csv;charset=utf-8,";
     csv += header.join(",") + "\n";
-    for (l = 0, len1 = body.length; l < len1; l++) {
-      r = body[l];
+    for (m = 0, len1 = body.length; m < len1; m++) {
+      r = body[m];
       csv += r.join(",") + "\n";
     }
     return csv;
@@ -355,6 +355,7 @@
     $scope.showAggregateTable = false;
     $scope.selectedFact = {};
     $scope.fullSetAggregates = [];
+    $scope.dataPoints = 100;
     $scope.setAggregateOp = function(op) {
       return $scope.aggSettings.aggFunction = op;
     };
@@ -421,47 +422,8 @@
       }
       return $scope.fullSetAggregates = table;
     };
-    $scope.showSlippage = function() {
-      var category, j, len, rawData, reduced, ref, slippage, slippageData;
-      $scope.showAggregateTable = false;
-      d3.selectAll("svg > *").remove();
-      $scope.aggSettings.tab = 1;
-      slippageData = {};
-      rawData = $scope.metrics.map(function(d) {
-        var category, slippage;
-        category = d.slippage > 0 ? 'Positive' : d.slippage < 0 ? 'Negative' : 'None';
-        slippage = d.slippage;
-        return {
-          category: category,
-          slippage: slippage
-        };
-      });
-      for (j = 0, len = rawData.length; j < len; j++) {
-        ref = rawData[j], category = ref.category, slippage = ref.slippage;
-        (slippageData[category] || (slippageData[category] = [])).push({
-          category: category,
-          slippage: slippage
-        });
-      }
-      reduced = $.map(slippageData, function(value, index) {
-        return {
-          label: index,
-          val: value.length
-        };
-      });
-      return nv.addGraph(function() {
-        var chart;
-        chart = nv.models.pieChart().x(function(d) {
-          return d.label;
-        }).y(function(d) {
-          return d.val;
-        }).showLabels(true);
-        d3.select("#chart svg").datum(reduced).transition().duration(1000).call(chart);
-        return chart;
-      });
-    };
     $scope.barsByHour = function() {
-      var formattedData, hours, j, k, kvpData, l, len, len1, n, ref, v, values;
+      var a, formattedData, hours, j, kvpData, len, len1, m, n, ref, v;
       console.log("in the call");
       $scope.showAggregateTable = false;
       d3.selectAll("svg > *").remove();
@@ -471,27 +433,32 @@
         return new Date(d.date).getHours();
       };
       formattedData = $scope.calculateAggregateKvp(hours);
+      console.log(formattedData);
       kvpData = [];
       for (j = 0, len = formattedData.length; j < len; j++) {
-        ref = formattedData[j], k = ref.k, values = ref.values;
+        a = formattedData[j];
         n = {
-          key: k
+          key: a.key,
+          values: []
         };
-        for (l = 0, len1 = values.length; l < len1; l++) {
-          v = values[l];
-          n["values"] = {
+        ref = a.values;
+        for (m = 0, len1 = ref.length; m < len1; m++) {
+          v = ref[m];
+          n["values"].push({
             x: v[0],
             y: v[1]
-          };
+          });
         }
         kvpData.push(n);
       }
       console.log(kvpData);
       return nv.addGraph(function() {
         var chart;
-        chart = nv.models.multiBarChart().transitionDuration(350).reduceXTicks(true).rotateLabels(0).showControls(true).groupSpacing(0.1);
+        chart = nv.models.multiBarChart();
+        console.log("chart created");
         chart.xAxis.tickFormat(d3.format(",1f"));
         chart.yAxis.tickFormat(d3.format(",1f"));
+        console.log("axis scaled");
         d3.select("#chart svg").datum(kvpData).call(chart);
         nv.utils.windowResize(chart.update);
         return chart;
@@ -583,10 +550,12 @@
       $scope.fetching = true;
       $scope.aggSettings.startDate = params.startDate;
       $scope.aggSettings.endDate = params.endDate;
+      $scope.dataPoints = params.dataPoints;
+      console.log($scope.dataPoints);
       emps = ["Smith", "Josh", "Sonia", "Paraig", "Rachel"];
       category = ["Food", "Beverage", "Goods", "Other"];
       dayPart = ["Breakfast", "Lunch", "Dinner"];
-      r = Math.floor(Math.random() * 3000) + 700;
+      r = $scope.dataPoints;
       sales = [];
       for (i = j = 1, ref = r; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
         s = Math.floor(Math.random() * 150) + 1;
@@ -611,6 +580,9 @@
         };
         sales.push(rec);
       }
+      sales.sort(function(l, r) {
+        return l.date.getTime() - r.date.getTime();
+      });
       $scope.metrics = sales;
       console.log($scope.metrics);
       $scope.showAccordians = true;
